@@ -236,7 +236,7 @@ class BookCitationBlockTest {
     // [utest->req~import.pdf.book-citation-publication~1]
     @Test
     void acceptsNoBreakSpacesAsWhitespace() {
-        String noBreakSpace = " ";
+        String noBreakSpace = "\u00A0";
         String headingLine = AUTHOR_HEADING + noBreakSpace;
         String titleLine = "К56 Збірник задач / О. П. Коваль." + noBreakSpace + "— Харків" + noBreakSpace + ": Видавництво"
                 + noBreakSpace + "«Ранок»," + noBreakSpace + "2010." + noBreakSpace + "— 176" + noBreakSpace + "с.";
