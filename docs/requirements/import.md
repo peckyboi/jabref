@@ -96,4 +96,13 @@ The individual terms are insufficient for exclusion. This rule recognizes a spec
 
 Needs: impl, utest
 
+## Book publication details must come only from the citation's publication area
+`req~import.pdf.book-citation-publication~1`
+
+For the book-import work in [JabRef issue #12874](https://github.com/JabRef/jabref/issues/12874), the publisher and year of a book are read only from the publication area ("Place : Publisher, Year") of the Ukrainian cataloguing-in-publication record on its bibliographic page. Dates and names from approval notices, copyright lines, print details, and reviewer lists are never used.
+
+If the page has no publication area or more than one, neither field is filled. If the area names several publishers, the publisher stays empty.
+
+Needs: impl, utest
+
 <!-- markdownlint-disable-file MD022 -->
