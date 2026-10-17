@@ -91,6 +91,29 @@ public class ISBN implements Identifier {
         return isValidFormat() && isValidChecksum();
     }
 
+    /// Returns the ISBN-13 form of this ISBN, so that an ISBN-10 and its ISBN-13 can be compared.
+    /// An ISBN-13 is returned as is. Empty if this ISBN is not valid.
+    public Optional<ISBN> asIsbn13() {
+        if (!isValid()) {
+            return Optional.empty();
+        }
+        if (isbnString.length() == 13) {
+            return Optional.of(this);
+        }
+        String first12Digits = "978" + isbnString.substring(0, 9);
+        return Optional.of(new ISBN(first12Digits + isbn13CheckDigit(first12Digits)));
+    }
+
+    /// Computes the check digit of an ISBN-13 from its first 12 digits.
+    /// The digits are weighted 1, 3, 1, 3, ... and summed. The check digit brings the sum up to a multiple of 10.
+    private static int isbn13CheckDigit(String first12Digits) {
+        int sum = 0;
+        for (int pos = 0; pos < 12; pos++) {
+            sum += (first12Digits.charAt(pos) - '0') * ((pos % 2) == 0 ? 1 : 3);
+        }
+        return (10 - (sum % 10)) % 10;
+    }
+
     @Override
     public Field getDefaultField() {
         return StandardField.ISBN;
