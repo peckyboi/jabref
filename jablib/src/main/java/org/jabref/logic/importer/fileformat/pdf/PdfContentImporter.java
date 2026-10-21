@@ -16,7 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jabref.logic.importer.ParserResult;
-import org.jabref.logic.importer.util.IsbnExtractor;
 import org.jabref.logic.l10n.Localization;
 import org.jabref.logic.os.OS;
 import org.jabref.logic.util.PdfUtils;
@@ -213,12 +212,14 @@ public class PdfContentImporter extends PdfImporter {
         if (bibliographicPages.isEmpty()) {
             return importPaperContent(document);
         }
-        List<ISBN> isbns = new IsbnExtractor().extract(bibliographicPages.orElseThrow());
+        List<ISBN> isbns = ISBN.findAllInText(bibliographicPages.orElseThrow());
         if (isbns.isEmpty()) {
             return importPaperContent(document);
         }
         if (isbns.size() > 1) {
-            return new ParserResult();
+            ParserResult result = new ParserResult();
+            result.addWarning(Localization.lang("More than one ISBN found"));
+            return result;
         }
         BibEntry bookEntry = new BibEntry(StandardEntryType.Book)
                 .withField(StandardField.ISBN, isbns.getFirst().asString());
