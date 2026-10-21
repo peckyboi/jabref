@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.jabref.logic.importer.ParserResult;
 import org.jabref.logic.importer.util.IsbnExtractor;
+import org.jabref.logic.l10n.Localization;
 import org.jabref.logic.util.PdfUtils;
 import org.jabref.model.entry.BibEntry;
 import org.jabref.model.entry.field.StandardField;
@@ -95,7 +96,9 @@ public class PdfBookMetadataImportTest {
         ParserResult result = importFixture("imprint-multiple-isbns.pdf");
 
         assertEquals(List.of(), result.getDatabase().getEntries());
-        assertEquals(List.of(), result.warnings());
+        assertEquals(
+                List.of(Localization.lang("More than one ISBN found")),
+                result.warnings());
     }
 
     @Test
