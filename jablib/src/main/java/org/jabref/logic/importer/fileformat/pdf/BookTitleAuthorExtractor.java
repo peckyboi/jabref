@@ -18,28 +18,19 @@ final class BookTitleAuthorExtractor {
 
     private static final String SPACE = "[\\s\\h]";
 
-    private static final Pattern TITLE_AUTHOR_SEPARATOR =
-            Pattern.compile("\\h+/\\h+");
+    private static final Pattern TITLE_AUTHOR_SEPARATOR = Pattern.compile("\\h+/\\h+");
 
-    private static final Pattern AREA_SEPARATOR =
-            Pattern.compile("\\.\\h*[—–-]\\h+");
+    private static final Pattern AREA_SEPARATOR = Pattern.compile("\\.\\h*[—–-]\\h+");
 
-    private static final Pattern CATALOGUE_CODE =
-            Pattern.compile("^\\s*[\\p{Lu}\\p{N}]{1,4}\\d{1,3}\\s+");
+    private static final Pattern CATALOGUE_CODE = Pattern.compile("^\\s*[\\p{Lu}\\p{N}]{1,4}\\d{1,3}\\s+");
 
-    private static final Pattern AUTHOR_HEADING =
-            Pattern.compile("\\p{Lu}[\\p{L}'’ʼ-]+,?\\h+\\p{Lu}\\.(?:\\h*\\p{Lu}\\.)?");
+    private static final Pattern AUTHOR_HEADING = Pattern.compile("\\p{Lu}[\\p{L}'’ʼ-]+,?\\h+\\p{Lu}\\.(?:\\h*\\p{Lu}\\.)?");
 
-    private static final Pattern EDITOR_LABEL =
-            Pattern.compile(
-                    "(?iu)^(?:за\\s+ред(?:акцією)?\\.?|під\\s+ред(?:акцією)?\\.?|ред(?:актор(?:и)?)?\\.?)\\s*[:.]?\\s*(.+)$");
+    private static final Pattern EDITOR_LABEL = Pattern.compile("(?iu)^(?:за\\s+ред(?:акцією)?\\.?|під\\s+ред(?:акцією)?\\.?|ред(?:актор(?:и)?)?\\.?)\\s*[:.]?\\s*(.+)$");
 
-    private static final Pattern NON_AUTHOR_LABEL =
-            Pattern.compile(
-                    "(?iu)^(?:рецензент(?:и)?|reviewer(?:s)?|isbn|удк|ббк)\\b");
+    private static final Pattern NON_AUTHOR_LABEL = Pattern.compile("(?iu)^(?:рецензент(?:и)?|reviewer(?:s)?|isbn|удк|ббк)\\b");
 
-    private static final Pattern SPACES =
-            Pattern.compile(SPACE + "+");
+    private static final Pattern SPACES = Pattern.compile(SPACE + "+");
 
     private BookTitleAuthorExtractor() {
     }
