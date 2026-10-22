@@ -154,7 +154,6 @@ class ISBNTest {
         );
     }
 
-    /// Documents what is deliberately not found.
     static Stream<Arguments> knownLimitations() {
         return Stream.of(
                 // no separator between the numbers
@@ -187,5 +186,29 @@ class ISBNTest {
     })
     void findAllInTextFindsNothing(String text) {
         assertEquals(List.of(), findAllInTextAsStrings(text));
+    }
+
+    static Stream<Arguments> findInText() {
+        return Stream.of(
+                Arguments.of("", Optional.empty()),
+                Arguments.of("ISBN 978-0-596-52068-7", Optional.of(new ISBN("9780596520687"))),
+                // A single ISBN-10 is returned as ISBN-13
+                Arguments.of("ISBN 0-596-52068-9", Optional.of(new ISBN("9780596520687"))),
+                // ISBN-13 and ISBN-10 of the same book, in both orders
+                Arguments.of("ISBN 978-0-596-52068-7\nISBN 0-596-52068-9", Optional.of(new ISBN("9780596520687"))),
+                Arguments.of("ISBN 0-596-52068-9\nISBN 978-0-596-52068-7", Optional.of(new ISBN("9780596520687"))),
+                Arguments.of("ISBN 978-0-596-52068-7, 9780596520687", Optional.of(new ISBN("9780596520687"))),
+                Arguments.of("ISBN 979-8-6024-0545-3", Optional.of(new ISBN("9798602405453"))),
+                // Different books
+                Arguments.of("ISBN 978-0-596-52068-7\nISBN 978-0-13-468599-1", Optional.empty()),
+                Arguments.of("ISBN 978-0-596-52068-7\nISBN 978-0-13-468599-1\nISBN 0-596-52068-9", Optional.empty()),
+                Arguments.of("ISBN 0-596-52068-9, 0-13-468599-7", Optional.empty())
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void findInText(String text, Optional<ISBN> expected) {
+        assertEquals(expected, ISBN.findInText(text));
     }
 }
