@@ -33,12 +33,13 @@ import com.google.common.base.Strings;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import static org.jabref.logic.util.strings.StringUtil.isNullOrEmpty;
 
-/// Parses book information page and creates a BibTeX entry from validated ISBN.
+/// Extracts local book metadata and validated ISBNs from a bibliographic page.
 /// If no page qualifies, falls back to parsing research paper information from the first page of the PDF and creates a BibTeX entry.
 ///
 /// Currently, Springer, and IEEE formats are supported.
@@ -206,27 +207,86 @@ public class PdfContentImporter extends PdfImporter {
     }
 
     @Override
-    public ParserResult importDatabase(Path filePath, PDDocument document) throws IOException {
+    @NonNull
+    public ParserResult importDatabase(@NonNull Path filePath, @NonNull PDDocument document) throws IOException {
+        Optional<BookExtraction> book = extractBook(document);
+        if (book.isEmpty()) {
+            return importPaperContent(document);
+        }
+        return importBook(book.orElseThrow());
+    }
+
+    Optional<BookExtraction> extractBook(PDDocument document) throws IOException {
         List<String> pageTexts = PdfPageScanner.scanPages(document);
         Optional<String> bibliographicPages = BibliographicPageDetector.findBibliographicPage(pageTexts);
         if (bibliographicPages.isEmpty()) {
-            return importPaperContent(document);
+            return Optional.empty();
         }
-        List<ISBN> isbns = ISBN.findAllInText(bibliographicPages.orElseThrow());
-        if (isbns.isEmpty()) {
-            return importPaperContent(document);
+        String pageText = bibliographicPages.orElseThrow();
+        Optional<BibEntry> localBook = extractBookMetadata(pageText);
+
+        List<ISBN> isbns = ISBN.findAllInText(pageText);
+        if (isbns.isEmpty() && localBook.isEmpty()) {
+            return Optional.empty();
         }
+        return Optional.of(new BookExtraction(localBook, isbns));
+    }
+
+    ParserResult importBook(BookExtraction book) {
+        Optional<BibEntry> localBook = book.localBook();
+        List<ISBN> isbns = book.isbnCandidates();
         if (isbns.size() > 1) {
-            ParserResult result = new ParserResult();
+            ParserResult result;
+            if (localBook.isEmpty()) {
+                result = new ParserResult();
+            } else {
+                result = new ParserResult(List.of(localBook.orElseThrow()));
+            }
+
             result.addWarning(Localization.lang("More than one ISBN found"));
             return result;
         }
-        BibEntry bookEntry = new BibEntry(StandardEntryType.Book)
-                .withField(StandardField.ISBN, isbns.getFirst().asString());
+        BibEntry bookEntry;
+        if (localBook.isEmpty()) {
+            bookEntry = new BibEntry(StandardEntryType.Book);
+        } else {
+            bookEntry = new BibEntry(localBook.orElseThrow());
+        }
+        if (isbns.size() == 1) {
+            bookEntry.withField(StandardField.ISBN, isbns.getFirst().asString());
+        }
         return new ParserResult(List.of(bookEntry));
     }
 
-    private ParserResult importPaperContent(PDDocument document) throws IOException {
+    private Optional<BibEntry> extractBookMetadata(String pageText) {
+        Optional<String> citationBlock = BookCitationBlock.find(pageText);
+        if (citationBlock.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String block = citationBlock.orElseThrow();
+        BibEntry bookEntry = new BibEntry(StandardEntryType.Book);
+
+        BookTitleAuthorExtractor.findTitle(block)
+                .ifPresent(title -> bookEntry.withField(StandardField.TITLE, title));
+        BookTitleAuthorExtractor.findAuthors(block)
+                .ifPresent(authors -> {
+                    String formattedAuthors = streamlineNames(authors);
+                    bookEntry.withField(StandardField.AUTHOR, formattedAuthors);
+                });
+        BookTitleAuthorExtractor.findEditors(block)
+                .ifPresent(editors -> {
+                    String formattedEditors = streamlineNames(editors);
+                    bookEntry.withField(StandardField.EDITOR, formattedEditors);
+                });
+        BookCitationBlock.findPublisher(block)
+                .ifPresent(publisher -> bookEntry.withField(StandardField.PUBLISHER, publisher));
+        BookCitationBlock.findYear(block)
+                .ifPresent(year -> bookEntry.withField(StandardField.YEAR, year));
+        return Optional.of(bookEntry);
+    }
+
+    ParserResult importPaperContent(PDDocument document) throws IOException {
         List<BibEntry> result = new ArrayList<>(1);
         String firstPageContents = PdfUtils.getFirstPageContents(document);
         Optional<String> titleByFontSize = extractTitleFromDocument(document);
