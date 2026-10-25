@@ -283,6 +283,8 @@ public class PdfContentImporter extends PdfImporter {
                 .ifPresent(publisher -> bookEntry.withField(StandardField.PUBLISHER, publisher));
         BookCitationBlock.findYear(block)
                 .ifPresent(year -> bookEntry.withField(StandardField.YEAR, year));
+        BookCitationBlock.findEdition(block)
+                .ifPresent(edition -> bookEntry.withField(StandardField.EDITION, edition));
         return Optional.of(bookEntry);
     }
 
