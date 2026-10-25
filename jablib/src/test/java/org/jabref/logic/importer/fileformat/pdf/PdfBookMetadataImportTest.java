@@ -87,6 +87,26 @@ public class PdfBookMetadataImportTest {
         assertImportedBook("imprint-with-distractor.pdf", "9789660800007");
     }
 
+    static Stream<Arguments> citationEditions() {
+        return Stream.of(
+                Arguments.of("front-citation.pdf", Optional.of("2")),
+                Arguments.of("back-citation.pdf", Optional.of("2")),
+                Arguments.of("citation-editor-edition.pdf", Optional.of("2")),
+                Arguments.of("citation-without-isbn.pdf", Optional.of("2")),
+                Arguments.of("citation-ambiguous-isbns.pdf", Optional.of("2")),
+                Arguments.of("citation-missing-optional-fields.pdf", Optional.empty()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("citationEditions")
+    @ResourceLock("Localization.lang")
+    void importsEditionFromCitationWhenPresent(String fileName, Optional<String> expectedEdition) throws URISyntaxException {
+        BibEntry entry = importSingleEntry(fileName);
+
+        assertEquals(StandardEntryType.Book, entry.getType());
+        assertEquals(expectedEdition, entry.getField(StandardField.EDITION));
+    }
+
     static Stream<Arguments> citationIsbns() {
         return Stream.of(
                 Arguments.of("ISBN 978-966-08-0000-7", Optional.of("9789660800007")),
