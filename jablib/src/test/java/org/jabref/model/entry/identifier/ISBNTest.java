@@ -154,6 +154,7 @@ class ISBNTest {
         );
     }
 
+    /// Documents what is deliberately not found.
     static Stream<Arguments> knownLimitations() {
         return Stream.of(
                 // no separator between the numbers
